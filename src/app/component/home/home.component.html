@@ -1,0 +1,322 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">User Access Control Portal</a>
+      <small *ngIf="tabAction$ | async as title">{{title}}</small>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" (click)="changeTitle('Users')"><i class="fas fa-users"></i>Users</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link"  (click)="changeTitle('Settings')"><i class="fas fa-cogs"></i>Settings</a>
+          </li>
+        
+        </ul>
+        <div class="dropdown">
+           
+            <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"><i class="fas fa-ghost"></i>Welcome, </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" (click) = "changeTitle('Profile')">Profile</a></li>
+     
+              <li><hr class="dropdown-divider"></li>
+        
+              <li><a class="dropdown-item" >Log out</a></li>
+            </ul>
+          </div>
+        <form class="d-flex">
+          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  <div class="container mt-5">
+    <div class="row justify-content-between">
+      <form class="col-3 d-flex search-form">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+      <div class="col-3 d-flex">
+        <button class="btn btn-outline-success me-2" type="submit" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fas fa-plus"></i> New User</button>
+        <button (click)="getUsers(true)" class="btn btn-outline-success" type="submit"><i *ngIf="refresh" class="fas fa-sync fa-spin"></i><i *ngIf="!refresh" class="fas fa-sync"></i></button>
+      </div>
+
+    </div>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">NRIC</th>
+        <th scope="col">Username</th>
+        <th scope="col">email</th>
+        <th scope="col">Appointment</th>
+        <th scope="col">Status</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody *ngFor = "let user of users; let i = index">
+      <tr>
+        <th scope="row">{{ i + 1 }}</th>
+        <td (click)="onSelectUser(user)">{{ user.nric }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email}}</td>
+        <td>{{user.appt}}</td>
+        <td>
+          <span [hidden] = "user.locked" class= "badge bg-success">Active</span>
+          <span [hidden] = "!user.locked"class="badge bg-danger">Inactive</span>
+        </td>
+        <td>
+          <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+            <button type="button" class="btn action btn-outline-success"><i class="fas fa-edit"></i></button>
+            <button type="button" class="btn action btn-outline-danger"><i class="fas fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+     
+    
+    </tbody>
+  </table>
+  
+
+</div>
+
+<button [hidden]="true" id="openUserInfo" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewUserModel">
+  Launch demo modal
+</button>
+
+<!-- Modal -->
+<div #viewUserModal class="modal fade" id="viewUserModel"  data-bs-backdrop="false" tabindex="-1" aria-labelledby="viewUserModelLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewUserModelLabel">{{selectedUser?.email}} profile</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+       
+        <div class="container">
+          <div class="main-body">
+            <div class="row mt-3">
+              <div class="col-md-12">
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <h6 class="mb-0">Full Name</h6>
+                      </div>
+                      <div class="col-sm-9 text-secondary">
+                        {{selectedUser?.name}}
+                      </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <h6 class="mb-0">Email</h6>
+                      </div>
+                      <div class="col-sm-9 text-secondary">
+                        {{selectedUser?.email}}
+                      </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <h6 class="mb-0">Phone</h6>
+                      </div>
+                      <div *ngIf="selectedUser?.contactNo;else noContent "class="col-sm-9 text-secondary">
+                        {{selectedUser?.contactNo}}
+                      </div>
+                      <ng-template #noContent>
+                        <div class="col-sm-9 text-secondary">
+                         NA
+                        </div>
+                      </ng-template>
+                    </div>
+                    <hr>
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <h6 class="mb-0">Appt</h6>
+                      </div>
+                      <div class="col-sm-9 text-secondary">
+                        {{selectedUser?.appt}}
+                      </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <h6 class="mb-0">Expiry Date</h6>
+                      </div>
+                      <div *ngIf="selectedUser?.dteExpire;else  noContent" class="col-sm-9 text-secondary">
+                        {{selectedUser?.dteExpire}}
+                      </div>
+                     
+                      </div>
+                      <hr>
+                      <div class="row">
+                        <div class="col-sm-3">
+                          <h6 class="mb-0">Status: </h6>
+                        </div>
+                        <div *ngIf="selectedUser?.locked;else activeContent" class="col-sm-9 text-secondary">
+                          
+                          <span class="badge bg-danger">Inactive</span>
+                          
+                        </div>
+                        <ng-template #activeContent>
+                          <div class="col-sm-9 text-secondary">
+                            <span class= "badge bg-success">Active</span>
+                          </div>
+                        </ng-template>
+                      </div>
+                   
+                    <hr>
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <h6 class="mb-0">Last login at: </h6>
+                      </div>
+                      <div *ngIf="selectedUser?.dteLastLogin;else noContent" class="col-sm-9 text-secondary">
+                        
+                        {{selectedUser?.dteLastLogin | date: 'medium'}}
+                        
+                      </div>
+                  
+                    </div>
+                 
+                  <hr>
+                  
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+                <div class="row gutters-sm">
+                  <div class="col-md-12 mb-3">
+             
+                    <div *ngIf="selectedUser" class="card mt-3">
+                      <ul *ngIf="selectedUser.roleSet.length; else noRoleContent"  class="list-group list-group-flush">
+                        <li *ngFor="let role of selectedUser.roleSet" class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                          <h6 class="mb-0">{{role.role}}</h6>
+                          <!-- <span class="text-secondary">{{role.descr}}</span> -->
+                        </li>
+                        
+                      </ul>
+                    </div>
+                  </div>
+             
+                </div>
+                <ng-template #noRoleContent>
+                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                    <h6 class="mb-0"><i class="fas fa-feather-alt"></i></h6>
+                    <span class="text-secondary">No Role</span>
+                  </li>
+                </ng-template>
+              </div>
+          </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div #addUserModal class="modal fade" id="addUserModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addUserModalLabel">Add user</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form [formGroup]="userAccessControlRequestForm" (ngSubmit)="onSubmit()" >
+      <div class="modal-body">
+        <div class="card">
+          <div class="card-body">
+              <div class="col-sm-8">
+               <!-- Form starts -->
+          
+                <div class="form-group">
+                  <label>Salutation</label>
+                <select class="form-select" formControlName="salutation">
+                  <option *ngFor="let salu of salutationNames" [ngValue]="salu" (change)="changeSalu($event)">{{salu}}
+                  </option>
+                </select>
+              </div>
+             
+                
+                <div class="form-group">
+                  <label for="roles">Roles</label>
+                 <angular2-multiselect  [data]="dropdownList" [(ngModel)]="selectedItems"
+                                        [settings]="dropdownSettings" 
+                                        (onSelect)="onItemSelect($event)"
+                                        (onDeSelect)="OnItemDeSelect($event)" 
+                                        (onSelectAll)="onSelectAll($event)" 
+                                        (onDeSelectAll)="onDeSelectAll($event)" 
+                                        (onOpen)="onOpen($event)"
+                                        (onClose)="onClose($event)"
+                                        formControlName="roleSet">
+                  </angular2-multiselect>
+              </div>
+              <div *ngIf="  !isRolesDdlOpened && selectedItems.length == 0">
+                <sup>*</sup>Please select at least 1 role
+              </div>
+            
+              <div class="form-group">
+                <label for="nric">NRIC</label>
+                <input type="text" class="form-control" id="nric" placeholder="NRIC" formControlName="nric">
+
+            </div>
+              <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" placeholder="name" formControlName="name">
+
+            </div>
+              <div class="form-group">
+                <label for="userInitial">User initial</label>
+                <input type="text" class="form-control" id="userInitial" placeholder="User initial" formControlName="userInitial">
+
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" class="form-control" id="userInitial" placeholder="Email" formControlName="email">
+
+          </div>
+          <div *ngIf=" email.touched && email.dirty  && email.errors?.email">
+            <sup>*</sup>Invalid email
+          </div>
+    
+          <div class="form-group">
+            <label for="displayName">Display Name</label>
+            <input type="text" class="form-control" id="displayName" placeholder="Display Name" formControlName="displayName">
+
+        </div>
+        <div class="form-group">
+          <label for="appt">Appointment</label>
+          <input type="text" class="form-control" id="appt" placeholder="Display Name" formControlName="appt">
+      </div>
+                <!-- Submit Button -->
+                
+              </div>
+          </div>
+      </div>
+     
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button  type="submit" class="btn btn-primary" [disabled] = "!userAccessControlRequestForm.valid">Submit</button>
+      </div>
+      <p>roleSet: touched {{roleSet.touched }} </p>
+      <p>roleSet: pristine {{roleSet.pristine }} </p>
+      <p>roleSet: dirty {{roleSet.dirty }} </p>
+      <p>roleSet: valid {{roleSet.valid }} </p>
+      <p>roleSet: pending {{roleSet.pending }} </p>
+      <p>roleSet: open {{isRolesDdlOpened}} </p>
+    </form><!-- Form ends -->
+    </div>
+  </div>
+</div>
