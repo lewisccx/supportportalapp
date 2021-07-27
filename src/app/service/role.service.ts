@@ -18,4 +18,6 @@ export class RoleService {
   public getCompatibleRoles( roleOid: string): Observable<Role[]> {
     return this.http.get<Role[]>(`${this.host_url}/role/combo/${roleOid}`)
   }
+
+
 }

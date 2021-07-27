@@ -17,6 +17,7 @@ import { HomeComponent } from './component/home/home.component';
 import { ReactiveFormsModule,FormsModule } from '@angular/forms';
 import { RoleService } from './service/role.service';
 import { AngularMultiSelectModule } from 'angular2-multiselect-dropdown';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { AngularMultiSelectModule } from 'angular2-multiselect-dropdown';
     FormsModule,
     ReactiveFormsModule,
     AngularMultiSelectModule,
-    AppRoutingModule
+    AppRoutingModule,
+    NgbModule
   ],
   providers: [NotificationService, AuthGuard, AuthService, UserService, RoleService, {
     provide: HTTP_INTERCEPTORS, 

@@ -1,7 +1,8 @@
-import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CustomHttpResponse } from '../model/custom-http-response';
+import { pageUser } from '../model/pageUser';
 import { User } from '../model/user';
 
 import { environment } from './../../environments/environment';
@@ -14,8 +15,34 @@ export class UserService {
   private host_url: string = environment.API_URL
   constructor(private http :HttpClient) { }
 
-  public getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.host_url}/user/list`);
+  public getUsers(currentPage? : number, filter?: string, sorted?: boolean, query?: string): Observable<pageUser> {
+    //if(currentPage !== undefined){
+      console.log(filter, query)
+      if(filter !== undefined){
+        //console.log("filter and sorted in user service: ",filter + " " + sorted + " "+ currentPage);
+        return this.http.get<pageUser>(`${this.host_url}/user/list?filter=${filter}&sorted=${sorted}&page=${currentPage}`);
+      }
+      if(query !== undefined && query !== "") {
+        //console.log("filter and sorted in user service: ",filter + " " + sorted + " "+ currentPage);
+        return this.http.get<pageUser>(`${this.host_url}/user/list?query=${query}`);
+      }
+      if(filter !== undefined && query !== undefined && query !== ""){
+        
+        return this.http.get<pageUser>(`${this.host_url}/user/list?query=${query}&sorted=${sorted}&page=${currentPage}`);
+      }
+      
+     
+        return this.http.get<pageUser>(`${this.host_url}/user/list?page=${currentPage}`);
+      
+    
+    //}
+    
+    // if(filter != null && sorted){
+    //   console.log("filter and sorted in user service: ",filter + " " + sorted);
+    //   return this.http.get<pageUser>(`${this.host_url}/user/list?filter=${filter}&sorted=${sorted}`);
+    // }
+
+   // return this.http.get<pageUser>(`${this.host_url}/user/list`);
   }
 
   public updateUser(formData: FormData): Observable<User>{
@@ -26,6 +53,9 @@ export class UserService {
     return this.http.delete<CustomHttpResponse>(`${this.host_url}/user/delete/${nric}`);
   }
 
+  // public sortUser(filter: String, sorted: boolean): Observable<pageUser>{
+  //   return this.http.p
+  // }
   public addUsersToLocalStorage(users: User[]): void{
 
     localStorage.setItem('users', JSON.stringify(users));

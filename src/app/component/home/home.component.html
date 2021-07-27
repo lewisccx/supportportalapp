@@ -26,22 +26,26 @@
               <li><a class="dropdown-item" >Log out</a></li>
             </ul>
           </div>
-        <form class="d-flex">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
+ 
+     
       </div>
     </div>
   </nav>
+  {{searchForm.valid}}
+  {{searchForm.touched}}
+  
   <div class="container mt-5">
     <div class="row justify-content-between">
-      <form class="col-3 d-flex search-form">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
+      <form class="col-4 d-flex" [formGroup]="searchForm" (ngSubmit)="onSearch()" >
+        <div class="form-group">
+        <input class="form-control" formControlName="query" id="query" type="search" placeholder="Search" aria-label="Search">
+       
+      </div>
+      <button  type="submit" class="btn btn-primary" [disabled] = "!searchForm.valid">Submit</button>
       </form>
       <div class="col-3 d-flex">
         <button class="btn btn-outline-success me-2" type="submit" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fas fa-plus"></i> New User</button>
-        <button (click)="getUsers(true)" class="btn btn-outline-success" type="submit"><i *ngIf="refresh" class="fas fa-sync fa-spin"></i><i *ngIf="!refresh" class="fas fa-sync"></i></button>
+        <button (click)="refreshList()" class="btn btn-outline-success" type="submit"><i *ngIf="refresh" class="fas fa-sync fa-spin"></i><i *ngIf="!refresh" class="fas fa-sync"></i></button>
       </div>
 
     </div>
@@ -51,16 +55,16 @@
       <tr>
         <th scope="col">#</th>
         <th scope="col">NRIC</th>
-        <th scope="col">Username</th>
+        <th scope="col" (click)="onUserNameSort()">Username <i class="bi bi-arrow-up" *ngIf="sorted && sortNameClick"></i><i class="bi bi-arrow-down" *ngIf="!sorted && sortNameClick"></i></th>
         <th scope="col">email</th>
         <th scope="col">Appointment</th>
         <th scope="col">Status</th>
         <th scope="col">Actions</th>
       </tr>
     </thead>
-    <tbody *ngFor = "let user of users; let i = index">
-      <tr>
-        <th scope="row">{{ i + 1 }}</th>
+    <tbody >
+      <tr *ngFor = "let user of users; let i =  index">
+        <th scope="row">{{ (page * pageSize) + 1 + i }}</th>
         <td (click)="onSelectUser(user)">{{ user.nric }}</td>
         <td>{{ user.name }}</td>
         <td>{{ user.email}}</td>
@@ -80,8 +84,17 @@
     
     </tbody>
   </table>
-  
-
+  <nav aria-label="...">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" [ngClass]="{'disabled': previousDisabled }" >
+        <a class="page-link" (click)="onPreviousClick($event)" tabindex="-1" >Previous</a>
+      </li>
+      <li class="page-item" *ngFor="let p of pages; let i = index;" [ngClass]="{'active': i  == page }"><a class="page-link" href="" (click) = "onPageClick(i,$event)" >{{i + 1}}</a></li>
+      <li class="page-item" [ngClass]="{'disabled': nextDisabled }">
+        <a class="page-link" href="#">Next</a>
+      </li>
+    </ul>
+  </nav>
 </div>
 
 <button [hidden]="true" id="openUserInfo" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewUserModel">
@@ -231,7 +244,7 @@
         <h5 class="modal-title" id="addUserModalLabel">Add user</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form [formGroup]="userAccessControlRequestForm" (ngSubmit)="onSubmit()" >
+      <form [formGroup]="userAccessControlRequestForm" (ngSubmit)="onSubmit()">
       <div class="modal-body">
         <div class="card">
           <div class="card-body">
@@ -260,14 +273,17 @@
                                         formControlName="roleSet">
                   </angular2-multiselect>
               </div>
-              <div *ngIf="  !isRolesDdlOpened && selectedItems.length == 0">
-                <sup>*</sup>Please select at least 1 role
+              <div *ngIf="roleSet.errors?.empty">
+                <sup class="text-danger"> *Please select at least 1 role</sup>
               </div>
             
               <div class="form-group">
                 <label for="nric">NRIC</label>
-                <input type="text" class="form-control" id="nric" placeholder="NRIC" formControlName="nric">
+                <input  type="text" class="form-control" id="nric" placeholder="NRIC" formControlName="nric">
 
+            </div>
+            <div class="text-danger" *ngIf="nric.errors?.nricExists === false">
+               NRIC does not exists!
             </div>
               <div class="form-group">
                 <label for="name">Name</label>
@@ -283,10 +299,12 @@
             <div class="form-group">
               <label for="email">Email</label>
               <input type="email" class="form-control" id="userInitial" placeholder="Email" formControlName="email">
-
           </div>
-          <div *ngIf=" email.touched && email.dirty  && email.errors?.email">
-            <sup>*</sup>Invalid email
+          <div *ngIf="(email.touched || email.dirty)  && email.errors?.email">
+            <sup class="text-danger">*Invalid email</sup>
+          </div>
+          <div *ngIf="(email.touched || email.dirty)  && email.errors?.emailExists">
+            <sup class="text-danger">Email already exists!</sup>
           </div>
     
           <div class="form-group">
@@ -307,15 +325,16 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" #closeModalBtn class="btn btn-secondary" data-bs-dismiss="modal" (click)="onCloseModal()">Close</button>
         <button  type="submit" class="btn btn-primary" [disabled] = "!userAccessControlRequestForm.valid">Submit</button>
       </div>
-      <p>roleSet: touched {{roleSet.touched }} </p>
+      <!-- <p>roleSet: touched {{roleSet.touched }} </p>
       <p>roleSet: pristine {{roleSet.pristine }} </p>
       <p>roleSet: dirty {{roleSet.dirty }} </p>
       <p>roleSet: valid {{roleSet.valid }} </p>
       <p>roleSet: pending {{roleSet.pending }} </p>
-      <p>roleSet: open {{isRolesDdlOpened}} </p>
+      <p>roleSet: open {{isRolesDdlOpened}} </p> -->
+      <!-- <p> form: {{ userAccessControlRequestForm.valid}}</p> -->
     </form><!-- Form ends -->
     </div>
   </div>
